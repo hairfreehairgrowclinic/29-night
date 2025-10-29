@@ -185,10 +185,10 @@
   }
   #highlightBox {
     display: inline-block;
-    background: #e3f2ff;
-    color: #003d91;
+    background: linear-gradient(90deg, #2b79ff, #3a9bff);
+    color: #fff;
     font-weight: 700;
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 10px;
     margin-top: 6px;
   }
@@ -311,8 +311,23 @@
     </div>
 
     <div class="form-group">
-      <label for="city">📍 City</label>
-      <input type="text" id="city" placeholder="Enter your city">
+      <label for="city">📍 Enter or Select Your City</label>
+      <input type="text" id="city" list="cityList" placeholder="Type or select your city">
+      <datalist id="cityList">
+        <option value="Surat">
+        <option value="Pune (Pimple Gurav)">
+        <option value="Pune (Kharadi)">
+        <option value="Hyderabad">
+        <option value="Ahmedabad">
+        <option value="Kolkata">
+        <option value="Bangalore">
+        <option value="Bhopal">
+        <option value="Delhi (Gurugram)">
+        <option value="Nagpur">
+        <option value="Mumbai">
+        <option value="Vapi (Silvassa)">
+        <option value="Vizag">
+      </datalist>
     </div>
 
     <div class="form-group">
@@ -345,8 +360,9 @@
   <button id="calculateBtn">Calculate 💰</button>
 
   <div id="result">
-    <h3><span id="greeting"></span> Estimated Package:
-      <span id="highlightBox">₹<span id="total"></span></span>
+    <h3>
+      <span id="greeting"></span> Our Estimated Package:
+      <span id="highlightBox">₹<span id="totalLow"></span> – ₹<span id="totalHigh"></span></span>
     </h3>
     <p><strong>City:</strong> <span id="cityDisplay"></span></p>
     <p><strong>Technique:</strong> <span id="techniqueDisplay"></span></p>
@@ -385,51 +401,62 @@ const gradeData = {
   7:{range:"7000–8000",grafts:7500,img:"https://hairfreehairgrow.com/wp-content/uploads/2025/03/01-13.webp"}
 };
 
-// Grade click → Autofill grafts
 document.querySelectorAll("#gradePreview img").forEach(img=>{
   img.addEventListener("click",e=>{
     const g=e.target.dataset.grade;
     document.querySelectorAll("#gradePreview img").forEach(i=>i.classList.remove("active"));
     e.target.classList.add("active");
     const d=gradeData[g];
-    const graft=document.getElementById("grafts");
-    graft.value=d.grafts;
-    graft.focus(); graft.select();
+    document.getElementById("grafts").value=d.grafts;
     document.getElementById("graftRange").innerText=`💡 Suggested: ${d.range}`;
     document.getElementById("gradePreview").dataset.selected=g;
   });
 });
 
-// Calculate
 document.getElementById("calculateBtn").addEventListener("click",()=>{
-  const name=document.getElementById("username").value.trim();
+  const name=document.getElementById("username").value.trim()||"Dear User";
+  const grafts=parseInt(document.getElementById("grafts").value)||0;
+  const technique=parseInt(document.getElementById("technique").value);
   const city=document.getElementById("city").value.trim();
-  const grafts=parseInt(document.getElementById("grafts").value);
-  const rate=parseInt(document.getElementById("technique").value);
-  const grade=document.getElementById("gradePreview").dataset.selected;
-  const phone=document.getElementById("phone").value.trim();
+  const grade=document.getElementById("gradePreview").dataset.selected||"—";
+  const phone=document.getElementById("phone").value;
 
   if(!phone.match(/^[0-9]{10}$/)){
-    alert("📞 Please enter a valid 10-digit phone number.");
-    document.getElementById("phone").focus();
+    alert("Please enter a valid 10-digit phone number 📞");
     return;
   }
-  if(!grafts||grafts<=0){
-    alert("💡 Please enter grafts or select grade.");
+  if(!city){
+    alert("Please enter or select your city 🏙️");
+    return;
+  }
+  if(!grafts){
+    alert("Please select or enter grafts 💉");
     return;
   }
 
-  const totalMin=grafts*rate*0.9, totalMax=grafts*rate*1.1;
-  const minMarket=Math.round(totalMin-10000), maxMarket=Math.round(totalMax+40000);
-  document.getElementById("greeting").innerText=name?`Hi ${name},`:"Hi 👋";
-  document.getElementById("total").innerText=`${totalMin.toLocaleString()} – ${totalMax.toLocaleString()}`;
-  document.getElementById("marketPriceRange").innerText=`${minMarket.toLocaleString()} – ${maxMarket.toLocaleString()}`;
-  document.getElementById("techniqueDisplay").innerText=document.getElementById("technique").options[document.getElementById("technique").selectedIndex].text;
-  document.getElementById("cityDisplay").innerText=city||"Not specified";
-  document.getElementById("gradeDisplay").innerText=grade?`Grade ${grade}`:"Custom graft count";
-  document.getElementById("beforeAfter").innerHTML=grade?`<img src="${gradeData[grade].img}" alt="Result Grade ${grade}">`:"";
-  document.getElementById("result").classList.add("show");
-  document.getElementById("result").scrollIntoView({behavior:"smooth"});
+// Our estimated price (±5%)
+const totalLow = grafts * technique * 0.95;
+const totalHigh = grafts * technique * 1.05;
+
+// Market price (keep your existing logic)
+const marketLow = grafts * (technique - 5);
+const marketHigh = grafts * (technique + 25);
+
+  const selectedGrade=document.querySelector("#gradePreview img.active");
+  const imgSrc=selectedGrade?gradeData[selectedGrade.dataset.grade].img:"";
+
+  document.getElementById("totalLow").innerText=Math.round(totalLow).toLocaleString();
+  document.getElementById("totalHigh").innerText=Math.round(totalHigh).toLocaleString();
+  document.getElementById("marketPriceRange").innerText=`${marketLow.toLocaleString()} – ${marketHigh.toLocaleString()}`;
+  document.getElementById("techniqueDisplay").innerText=document.getElementById("technique").selectedOptions[0].text;
+  document.getElementById("gradeDisplay").innerText=grade;
+  document.getElementById("cityDisplay").innerText=city;
+  document.getElementById("greeting").innerText=`${name}, Your Estimated Cost:`;
+  document.getElementById("beforeAfter").innerHTML=imgSrc?`<img src='${imgSrc}' alt='Before After'>`:"";
+
+  const res=document.getElementById("result");
+  res.classList.add("show");
+  res.scrollIntoView({behavior:"smooth"});
 });
 </script>
 </body>
